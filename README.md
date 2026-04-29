@@ -24,13 +24,23 @@ python .\icssc_sim.py
 
 If Python is not on your PATH, run it with your local Python executable.
 
-## Run The Browser Demo
+## Run The Browser App
 
-Open `iterative_updating_app.html` in a browser, or from PowerShell:
+Open `index.html` in a browser, or from PowerShell:
 
 ```powershell
-start .\iterative_updating_app.html
+start .\index.html
 ```
+
+The older single-file browser prototype is still available as `iterative_updating_app.html`.
+
+## Project Structure
+
+- `src/core/architecture.js`: reusable iterative updating engine.
+- `src/demos/scenarios.js`: demo scenarios and event definitions.
+- `src/ui/app.js`: browser UI wiring.
+- `src/styles.css`: app styling.
+- `docs/architecture.md`: design notes and next mechanics.
 
 ## Roadmap
 
