@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Iterative Updating Simulator</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;margin:0;color:#172033;background:#fff}main{max-width:1120px;margin:auto;padding:24px}header{display:flex;justify-content:space-between;gap:16px;align-items:end;border-bottom:1px solid #d8dee8;padding-bottom:16px;margin-bottom:18px}h1{margin:0;font-size:28px}.sub{color:#667085;margin:6px 0 0}.grid{display:grid;grid-template-columns:280px 1fr;gap:16px}.panel{border:1px solid #d8dee8;background:#f6f8fb;border-radius:8px;padding:14px}.controls{display:grid;gap:12px;align-content:start}label{display:grid;gap:5px;color:#667085;font-size:13px}.row{display:flex;justify-content:space-between}.buttons{display:flex;gap:8px;flex-wrap:wrap}button{border:1px solid #aab4c3;background:#fff;border-radius:6px;min-height:36px;padding:0 12px;font-weight:700;cursor:pointer}.primary{background:#1f6feb;color:#fff;border-color:#1f6feb}.danger{color:#d92d20;border-color:#f1aaa4}.stores{display:grid;grid-template-columns:1fr 1fr;gap:14px}.items{display:flex;flex-wrap:wrap;gap:8px;min-height:90px}.item{background:#fff;border:1px solid #d8dee8;border-radius:6px;padding:8px 10px;min-width:82px;font-size:13px;font-weight:700;box-shadow:inset 4px 0 0 #2563eb}.stm .item{box-shadow:inset 4px 0 0 #8b5cf6}.item small{display:block;color:#667085;font-weight:400;margin-top:3px}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.metric{border:1px solid #d8dee8;border-radius:8px;padding:12px;background:#fff}.metric span{display:block;color:#667085;font-size:12px}.metric strong{font-size:20px}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #d8dee8;border-radius:8px;overflow:hidden}th,td{border-bottom:1px solid #d8dee8;padding:8px;text-align:left;font-size:12px;vertical-align:top}th{background:#f1f4f8;color:#667085}.jump td{background:#fff2f0}.pill{border-radius:999px;padding:2px 7px;font-weight:700;background:#eaf1ff;color:#2563eb}.pill.jump{background:#ffe4e0;color:#d92d20}@media(max-width:800px){main{padding:14px}header,.grid,.stores,.metrics{display:grid;grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div><h1>Iterative Updating Simulator</h1><p class="sub">FoA, STM, multiassociative search, and attention jumps.</p></div>
+    <div class="buttons"><button id="step" class="primary">Step</button><button id="run">Run</button><button id="reset" class="danger">Reset</button></div>
+  </header>
+  <div class="grid">
+    <section class="panel controls">
+      <h2>Parameters</h2>
+      <label><span class="row">FoA capacity <b id="foaCapacityV"></b></span><input id="foaCapacity" type="range" min="2" max="7" value="4"></label>
+      <label><span class="row">STM capacity <b id="stmCapacityV"></b></span><input id="stmCapacity" type="range" min="4" max="14" value="9"></label>
+      <label><span class="row">FoA decay <b id="foaDecayV"></b></span><input id="foaDecay" type="range" min="0.05" max="0.55" step="0.01" value="0.24"></label>
+      <label><span class="row">STM decay <b id="stmDecayV"></b></span><input id="stmDecay" type="range" min="0.01" max="0.24" step="0.01" value="0.08"></label>
+      <label><span class="row">Dopamine gate <b id="dopamineV"></b></span><input id="dopamine" type="range" min="0" max="1" step="0.01" value="0.55"></label>
+      <label><span class="row">Update slots <b id="slotsV"></b></span><input id="slots" type="range" min="1" max="4" value="1"></label>
+      <label><span class="row">Noise <b id="noiseV"></b></span><input id="noise" type="range" min="0" max="0.12" step="0.01" value="0.03"></label>
+      <h2>Sensory Input</h2>
+      <div class="buttons"><button data-input="continuity">Continuity</button><button data-input="memory">Memory</button><button data-input="simulation">Simulation</button><button data-input="red_light">Red Light</button></div>
+    </section>
+    <section>
+      <div class="metrics"><div class="metric"><span>Step</span><strong id="time">0</strong></div><div class="metric"><span>Update</span><strong id="rate">0%</strong></div><div class="metric"><span>Continuity</span><strong id="cont">100%</strong></div><div class="metric"><span>Mode</span><strong id="mode">Seed</strong></div></div>
+      <div class="stores"><div class="panel"><h2>Focus of Attention</h2><div id="foa" class="items"></div></div><div class="panel stm"><h2>Short-Term Store</h2><div id="stm" class="items"></div></div></div>
+      <h2>History</h2><table><thead><tr><th>t</th><th>FoA</th><th>STM</th><th>SSC</th><th>New</th><th>Evicted</th><th>Update</th><th>Mode</th></tr></thead><tbody id="history"></tbody></table>
+    </section>
+  </div>
+</main>
+<script>
+const nodes={self:['abstract',.95,.75],goal:['abstract',.9,.9],paper:['visual',.6,.45],model:['abstract',.75,.7],continuity:['abstract',.8,.65],memory:['abstract',.75,.6],prediction:['abstract',.65,.55],simulation:['abstract',.65,.8],code:['motor',.55,.7],red_light:['sensory',.4,.95],brake:['motor',.55,.9]};
+const edgeList=[['self','goal',.28],['goal','model',.34],['goal','simulation',.3],['paper','model',.35],['paper','memory',.21],['model','continuity',.39],['model','prediction',.26],['continuity','memory',.32],['continuity','prediction',.27],['simulation','code',.37],['simulation','prediction',.31],['code','goal',.19],['red_light','brake',.65],['red_light','goal',-.25]];
+const graph=Object.fromEntries(Object.keys(nodes).map(n=>[n,{}]));for(const [a,b,w] of edgeList){graph[a][b]=w;graph[b][a]=w}
+const ids=['foaCapacity','stmCapacity','foaDecay','stmDecay','dopamine','slots','noise'];const $=id=>document.getElementById(id);const state={t:0,foa:{},stm:{},history:[],timer:null};
+function params(){return{foaCapacity:+$('foaCapacity').value,stmCapacity:+$('stmCapacity').value,foaDecay:+$('foaDecay').value,stmDecay:+$('stmDecay').value,dopamine:+$('dopamine').value,slots:Math.min(+$('slots').value,+$('foaCapacity').value),noise:+$('noise').value}}
+function reset(){state.t=0;state.foa={self:.72,goal:.72,paper:.72,model:.72};state.stm={};state.history=[];stop();render()}
+function add(o,k,v){o[k]=(o[k]||0)+v}
+function spread(input,p,jump,prev){const c={};for(const [store,sw] of [[state.foa,1],[state.stm,.38]])for(const [n,s] of Object.entries(store)){add(c,n,s*(1-p.foaDecay)*nodes[n][1]*sw);for(const [t,w] of Object.entries(graph[n]))add(c,t,s*w*sw)}for(const [n,s] of Object.entries(input)){add(c,n,s*(1+nodes[n][2]*p.dopamine));for(const [t,w] of Object.entries(graph[n]))if(w>0)add(c,t,s*w*.8)}if(jump)for(const n of prev)if(!(n in input))delete c[n];for(const n of Object.keys(c)){c[n]+=(Math.random()*2-1)*p.noise;if(c[n]<.32)delete c[n]}return c}
+function step(input={}){const p=params(),prev=new Set(Object.keys(state.foa)),prevStm=new Set(Object.keys(state.stm));const jump=Object.entries(input).some(([n,v])=>v>.8&&nodes[n][2]>.85);const slots=jump?p.foaCapacity:p.slots;const search=spread(input,p,jump,prev);const keep=Object.entries(state.foa).sort((a,b)=>b[1]*nodes[b[0]][1]-a[1]*nodes[a[0]][1]).slice(0,Math.max(0,p.foaCapacity-slots));const next=Object.fromEntries(keep);for(const [n,s] of Object.entries(search).sort((a,b)=>b[1]-a[1])){if(Object.keys(next).length>=p.foaCapacity)break;if(!(n in next))next[n]=Math.min(s,1)}const curr=new Set(Object.keys(next));const evicted=[...prev].filter(n=>!curr.has(n));for(const n of Object.keys(state.stm)){state.stm[n]*=1-p.stmDecay*(1.1-nodes[n][1]);if(state.stm[n]<.12)delete state.stm[n]}for(const n of evicted)state.stm[n]=Math.max(state.stm[n]||0,.72);for(const [n,s] of Object.entries(next))state.stm[n]=Math.max(state.stm[n]||0,s*.42);state.stm=Object.fromEntries(Object.entries(state.stm).sort((a,b)=>b[1]-a[1]).slice(0,p.stmCapacity));state.foa=next;const stmSet=new Set(Object.keys(state.stm));const ssc=[...prev].filter(n=>curr.has(n)).sort();const neu=[...curr].filter(n=>!prev.has(n)).sort();const rate=evicted.length/Math.max(1,prev.size);const cont=ssc.length/Math.max(1,new Set([...prev,...curr]).size);const mode=rate>=1?'jump':ssc.length>=2&&neu.length?'iterative':'stable';state.history.unshift({t:state.t,foa:Object.keys(state.foa),stm:Object.keys(state.stm),ssc,new:neu,evicted,rate,cont,mode});state.t++;render()}
+function renderItems(id,store){$(id).innerHTML=Object.entries(store).map(([n,s])=>`<div class="item">${n}<small>${nodes[n][0]} ${Math.round(s*100)}%</small></div>`).join('')}
+function render(){const p=params();for(const id of ids)$(id+'V').textContent=['foaDecay','stmDecay','dopamine','noise'].includes(id)?p[id].toFixed(2):p[id];renderItems('foa',state.foa);renderItems('stm',state.stm);const r=state.history[0];$('time').textContent=state.t;$('rate').textContent=r?Math.round(r.rate*100)+'%':'0%';$('cont').textContent=r?Math.round(r.cont*100)+'%':'100%';$('mode').textContent=r?r.mode:'Seed';$('history').innerHTML=state.history.map(r=>`<tr class="${r.mode==='jump'?'jump':''}"><td>${r.t}</td><td>${r.foa.join(', ')||'-'}</td><td>${r.stm.join(', ')||'-'}</td><td>${r.ssc.join(', ')||'-'}</td><td>${r.new.join(', ')||'-'}</td><td>${r.evicted.join(', ')||'-'}</td><td>${Math.round(r.rate*100)}%</td><td><span class="pill ${r.mode==='jump'?'jump':''}">${r.mode}</span></td></tr>`).join('')}
+function run(){if(state.timer)return stop();$('run').textContent='Pause';state.timer=setInterval(()=>step(),850)}function stop(){clearInterval(state.timer);state.timer=null;$('run').textContent='Run'}
+$('step').onclick=()=>step();$('run').onclick=run;$('reset').onclick=reset;for(const b of document.querySelectorAll('[data-input]'))b.onclick=()=>step({[b.dataset.input]:b.dataset.input==='red_light'?.92:.48});for(const id of ids)$(id).oninput=render;reset();
+</script>
+</body>
+</html>
